@@ -172,6 +172,7 @@ async function before_start() {
             await bekle_60sn();
             if(true/*trading==1*/){
                 await taraBatch(coin_list, 100);
+                console.log(new Date().toLocaleTimeString() + " - dakikalik tarama bitti.")
             }
         }
     } 
