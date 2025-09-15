@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+	<meta charset="UTF-8">
+	<title>Terminal Log Takip</title>
+	<style>
+		body {
+			font-family: Arial, sans-serif;
+			margin: 20px;
+			background-color: #121212;
+			color: #f0f0f0;
+		}
+
+		table {
+			border-collapse: collapse;
+			width: 30%;
+			margin-top: 10px;
+			margin-left: 0;
+			background-color: #1e1e1e;
+		}
+
+		th,
+		td {
+			border: 1px solid #444;
+			padding: 8px;
+			text-align: center;
+			vertical-align: middle;
+			color: #f0f0f0;
+		}
+
+		th {
+			background-color: #333;
+		}
+
+		tr:hover {
+			background-color: #2a2a2a;
+		}
+
+		th:first-child,
+		td:first-child {
+			text-align: left;
+		}
+
+		.input-container {
+			margin-bottom: 15px;
+		}
+
+		.input-container input {
+			padding: 5px;
+			width: 150px;
+		}
+
+		.input-container button {
+			padding: 5px 10px;
+			cursor: pointer;
+		}
+	</style>
+</head>
+
+<body>
+	<div id="currentTime" style="margin-bottom:10px; font-weight:bold;"></div>
+
+	<!-- Input ve buton -->
+	<div class="input-container">
+		<input type="number" id="sayiInput" placeholder="Bir sayı gir">
+		<button onclick="gonder()">amountGuncelle</button>
+		<span id="sonuc" style="margin-left:10px; font-weight:bold;"></span>
+	</div>
+
+	<table id="logTable">
+		<thead>
+			<tr>
+				<th>Coin Name</th>
+				<th>Satış Bekleyen</th>
+				<th>Satış Yapılan</th>
+				<th>Liq uzaklığı (%)</th>
+			</tr>
+		</thead>
+		<tbody></tbody>
+	</table>
+
+	<script>
+		// Backend'e input gönderme
+		function gonder() {
+			const sayi = document.getElementById("sayiInput").value;
+
+			fetch("http://localhost:3012/amountGuncelle", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ sayi: sayi })
+			})
+				.then(res => res.json())
+				.then(data => {
+					document.getElementById("sonuc").innerText = "Gönderilen sayı: " + data.gelenSayi;
+				})
+				.catch(err => console.error("Hata:", err));
+		}
+
+		// Logları çek ve tabloya ekle
+		async function fetchLogs() {
+			const res = await fetch("http://localhost:3011/logs");
+			const data = await res.json();
+
+			document.getElementById("currentTime").textContent =
+				"Son Güncelleme: " + data.son_guncelleme_saati;
+
+			const tbody = document.querySelector("#logTable tbody");
+			tbody.innerHTML = "";
+			data.logs.slice().forEach(log => {
+				const row = document.createElement("tr");
+				row.innerHTML = `<td>${log.coin_name}</td><td>${log.satis_bekleyen}</td><td>${log.satis_yapilan}</td><td>${log.liq_uzakligi.toString().length==0 ? "" : "%"+log.liq_uzakligi}</td>`;
+				tbody.appendChild(row);
+			});
+		}
+
+		fetchLogs();
+		setInterval(fetchLogs, 5000);
+	</script>
+</body>
+</html>
